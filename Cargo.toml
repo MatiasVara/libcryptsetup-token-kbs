@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+[package]
+name = "libcryptsetup-token-tdx-kbs"
+version = "2.0.0"
+license = "GPL-3.0-or-later"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[[bin]]
+name = "repart-kbs-helper"
+path = "src/bin/repart-kbs-helper.rs"
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.22"
+env_logger = "0.11"
+libc = "0.2"
+log = "0.4"
+serde_json = "1.0.149"
+smbios-lib = "0.9.2"
+toml = "1.0"
+zeroize = "1.8"
