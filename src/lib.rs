@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// LUKS2 external token handler for TDX attestation via KBS.
+// LUKS2 external token handler for TEE attestation via KBS.
 //
-// Performs TDX attestation against a Key Broker Service (KBS) using
+// Performs TEE attestation against a Key Broker Service (KBS) using
 // trustee-attester and returns the LUKS passphrase directly to
 // cryptsetup, without intermediate files or external services.
 

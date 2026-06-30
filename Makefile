@@ -1,7 +1,7 @@
-TARGET      = libcryptsetup-token-tdx-kbs.so
+TARGET      = libcryptsetup-token-kbs.so
 INSTALL_DIR = /usr/lib64/cryptsetup
-STATIC_LIB  = target/release/liblibcryptsetup_token_tdx_kbs.a
-VERSION_MAP = src/libcryptsetup-token-tdx-kbs.sym
+STATIC_LIB  = target/release/liblibcryptsetup_token_kbs.a
+VERSION_MAP = src/libcryptsetup-token-kbs.sym
 
 .PHONY: all clean install
 

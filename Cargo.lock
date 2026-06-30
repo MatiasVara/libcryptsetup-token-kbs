@@ -202,7 +202,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
 
 [[package]]
-name = "libcryptsetup-token-tdx-kbs"
+name = "libcryptsetup-token-kbs"
 version = "2.0.0"
 dependencies = [
  "anyhow",

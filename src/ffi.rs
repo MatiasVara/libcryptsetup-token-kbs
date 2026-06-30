@@ -3,7 +3,7 @@
 // C ABI exports for the cryptsetup LUKS2 token plugin interface.
 //
 // cryptsetup loads this .so and calls these functions when it encounters
-// a token of type "tdx-kbs" in the LUKS2 header.
+// a token of type "kbs" in the LUKS2 header.
 
 use libc::{c_char, c_int, c_void, size_t};
 use log::{error, info};
@@ -68,7 +68,7 @@ fn do_fetch_key(cd: *mut crypt_device, token: c_int) -> Result<Vec<u8>, c_int> {
             Err(_) => match crate::fetch_initdata_from_smbios() {
                 Ok(d) => d,
                 Err(_) => {
-                    error!("tdx-kbs: failed to fetch initdata from smbios");
+                    error!("kbs: failed to fetch initdata from smbios");
                     return Err(-libc::EAGAIN);
                 }
             },
@@ -77,7 +77,7 @@ fn do_fetch_key(cd: *mut crypt_device, token: c_int) -> Result<Vec<u8>, c_int> {
         match crate::fetch_initdata_from_smbios() {
             Ok(d) => d,
             Err(_) => {
-                error!("tdx-kbs: failed to fetch initdata from smbios");
+                error!("kbs: failed to fetch initdata from smbios");
                 return Err(-libc::EAGAIN);
             }
         }
@@ -89,7 +89,7 @@ fn do_fetch_key(cd: *mut crypt_device, token: c_int) -> Result<Vec<u8>, c_int> {
             Ok(key) => {
                 if attempt > 1 {
                     let msg = format!(
-                        "tdx-kbs: key obtained after {} seconds ({} attempts)\n",
+                        "kbs: key obtained after {} seconds ({} attempts)\n",
                         start.elapsed().as_secs(),
                         attempt
                     );
@@ -102,7 +102,7 @@ fn do_fetch_key(cd: *mut crypt_device, token: c_int) -> Result<Vec<u8>, c_int> {
                 let elapsed = start.elapsed().as_secs();
                 if elapsed >= MAX_RETRY_SECS {
                     let msg = format!(
-                        "tdx-kbs: failed after {}s ({} attempts): {}\n",
+                        "kbs: failed after {}s ({} attempts): {}\n",
                         elapsed, attempt, last_err
                     );
                     log_to_cryptsetup(cd, CRYPT_LOG_ERROR, &msg);
@@ -111,7 +111,7 @@ fn do_fetch_key(cd: *mut crypt_device, token: c_int) -> Result<Vec<u8>, c_int> {
                 }
                 if attempt <= 3 || attempt.is_multiple_of(5) {
                     let msg = format!(
-                        "tdx-kbs: attempt {} failed ({}s elapsed), retrying: {}\n",
+                        "kbs: attempt {} failed ({}s elapsed), retrying: {}\n",
                         attempt, elapsed, last_err
                     );
                     log_to_cryptsetup(cd, CRYPT_LOG_NORMAL, &msg);
@@ -137,7 +137,7 @@ pub extern "C" fn cryptsetup_token_open(
     password_len: *mut size_t,
     _usrptr: *mut c_void,
 ) -> c_int {
-    log_to_cryptsetup(cd, CRYPT_LOG_NORMAL, "tdx-kbs: token plugin invoked\n");
+    log_to_cryptsetup(cd, CRYPT_LOG_NORMAL, "kbs: token plugin invoked\n");
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| do_fetch_key(cd, token)));
 
@@ -146,7 +146,7 @@ pub extern "C" fn cryptsetup_token_open(
             log_to_cryptsetup(
                 cd,
                 CRYPT_LOG_NORMAL,
-                &format!("tdx-kbs: key obtained ({} bytes)\n", key.len()),
+                &format!("kbs: key obtained ({} bytes)\n", key.len()),
             );
             let buf = unsafe { libc::malloc(key.len()) as *mut c_char };
             if buf.is_null() {
@@ -164,12 +164,12 @@ pub extern "C" fn cryptsetup_token_open(
             log_to_cryptsetup(
                 cd,
                 CRYPT_LOG_ERROR,
-                &format!("tdx-kbs: fetch failed with code {}\n", code),
+                &format!("kbs: fetch failed with code {}\n", code),
             );
             code
         }
         Err(_panic) => {
-            log_to_cryptsetup(cd, CRYPT_LOG_ERROR, "tdx-kbs: PANIC in token plugin\n");
+            log_to_cryptsetup(cd, CRYPT_LOG_ERROR, "kbs: PANIC in token plugin\n");
             -libc::EAGAIN
         }
     }
@@ -203,7 +203,7 @@ pub extern "C" fn cryptsetup_token_dump(cd: *mut crypt_device, _json: *const c_c
     log_to_cryptsetup(
         cd,
         CRYPT_LOG_NORMAL,
-        "\ttype:       tdx-kbs\n\tmethod:     TDX attestation via KBS (trustee-attester)\n",
+        "\ttype:       kbs\n\tmethod:     TEE attestation via KBS (trustee-attester)\n",
     );
 }
 
@@ -224,7 +224,7 @@ pub extern "C" fn cryptsetup_token_validate(_cd: *mut crypt_device, json: *const
         Err(_) => return -libc::EINVAL,
     };
 
-    if v.get("type").and_then(|t| t.as_str()) != Some("tdx-kbs") {
+    if v.get("type").and_then(|t| t.as_str()) != Some("kbs") {
         return -libc::EINVAL;
     }
 

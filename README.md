@@ -1,7 +1,9 @@
-# libcryptsetup-token-tdx-kbs
+# libcryptsetup-token-kbs
 
 LUKS2 external token handler for unlocking encrypted volumes using attestation
-via a Key Broker Service (KBS). This has been tested using TDX and a QGS service.
+via a Key Broker Service (KBS). This has been tested using TDX (with a QGS
+service) and should also work with SEV-SNP or any TEE supported by
+`trustee-attester`.
 
 This plugin performs the full attestation flow inline: it reads the
 KBS URL from SMBIOS OEM strings, calls `trustee-attester` to obtain
@@ -46,7 +48,7 @@ When SMBIOS OEM strings provide the KBS configuration (see
 token:
 
 ```bash
-cryptsetup token import /dev/vda4 <<< '{"type":"tdx-kbs","keyslots":["0"]}'
+cryptsetup token import /dev/vda4 <<< '{"type":"kbs","keyslots":["0"]}'
 ```
 
 ### Register the token with embedded KBS parameters
@@ -56,7 +58,7 @@ can be embedded directly in the token JSON using `trustee.kbs.url` and
 `trustee.kbs.resource`:
 
 ```bash
-cryptsetup token import /dev/vda4 <<< '{"type":"tdx-kbs","keyslots":["0"],"trustee.kbs.url":"http://kbs-service:8080","trustee.kbs.resource":"default/my-vm/root"}'
+cryptsetup token import /dev/vda4 <<< '{"type":"kbs","keyslots":["0"],"trustee.kbs.url":"http://kbs-service:8080","trustee.kbs.resource":"default/my-vm/root"}'
 ```
 
 When these fields are present the plugin uses them directly; otherwise
@@ -70,11 +72,11 @@ cryptsetup luksDump /dev/vda4 | grep -A3 Token
 
 ## How it works
 
-1. `systemd-cryptsetup` finds a LUKS2 device with a `tdx-kbs` token.
-2. It loads this plugin (`libcryptsetup-token-tdx-kbs.so`).
+1. `systemd-cryptsetup` finds a LUKS2 device with a `kbs` token.
+2. It loads this plugin (`libcryptsetup-token-kbs.so`).
 3. The plugin reads SMBIOS OEM strings to find `initdata.toml`
    (base64-encoded, containing KBS URL and resource path).
-4. It calls `trustee-attester` to perform TDX attestation against
+4. It calls `trustee-attester` to perform TEE attestation against
    the KBS and retrieve the encrypted key.
 5. The key is returned to cryptsetup, which unlocks the volume.
 
@@ -126,7 +128,7 @@ version = "0.1.0"
 
 ### Integration with systemd-repart
 
-`systemd-repart` can automatically register the `tdx-kbs` token when
+`systemd-repart` can automatically register the `kbs` token when
 creating an encrypted partition at first boot. This requires a patched
 version of `systemd-repart` that supports the `EncryptToken=` option.
 
@@ -137,16 +139,16 @@ Create a repart definition in `/usr/lib/repart.d/10-root.conf`:
 Type=root
 Format=ext4
 Encrypt=key-file
-EncryptToken=tdx-kbs
+EncryptToken=kbs
 CopyFiles=/
 SizeMinBytes=3G
 SizeMaxBytes=10G
 ```
 
-The `EncryptToken=tdx-kbs` value tells `systemd-repart` to register a
-LUKS2 token of type `tdx-kbs` in the new partition header. The token
+The `EncryptToken=kbs` value tells `systemd-repart` to register a
+LUKS2 token of type `kbs` in the new partition header. The token
 type name must match the plugin library suffix:
-`libcryptsetup-token-<name>.so` — in this case `tdx-kbs`.
+`libcryptsetup-token-<name>.so` — in this case `kbs`.
 
 On first boot, `systemd-repart` needs a key file to encrypt the
 partition (`Encrypt=key-file`). A companion binary, `repart-kbs-helper`

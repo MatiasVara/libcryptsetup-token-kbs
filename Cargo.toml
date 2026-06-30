@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 [package]
-name = "libcryptsetup-token-tdx-kbs"
+name = "libcryptsetup-token-kbs"
 version = "2.0.0"
 license = "GPL-3.0-or-later"
 edition = "2021"
