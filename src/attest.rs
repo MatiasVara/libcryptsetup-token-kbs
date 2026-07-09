@@ -22,7 +22,7 @@ pub fn get_resource(initdata: &InitData) -> Result<Vec<u8>> {
         .arg("--path")
         .arg(initdata.kbs_resource());
 
-    // if initdata is passed, mrconfig will be
+    // if initdata is passed, mrconfig/hostData will be
     // included in the attestation token
     if !initdata.as_str().is_empty() {
         cmd.arg("--initdata").arg(initdata.as_str());
